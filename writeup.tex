@@ -33,6 +33,10 @@ So, now that we have a single equation to calculate our score, we need to find t
 Team = &\argmax_{s \in S} \sum\limits_{p \in s} {H_p^{adj} + R_p^{adj} + HR_p^{adj} + RBI_p^{adj} + AVG_p^{adj}} + \\ \nonumber &{W_p^{adj} + K_p^{adj} + SV_p^{adj} + {\frac{1}{ERA_p}}^{adj} + {\frac{1}{WHIP_p}}^{adj}} \\
 \nonumber s.t. &\sum\limits_{p \in s} c(p) \leq 260 \mbox{ where c(p) is the cost of player p}\\
 \nonumber &\{C,1B,2B,3B,SS,1B/3B,2B/SS,1B/2B/SS/3B,6 OF, 8 SP, 3 RP\} \in s \\ 
+\nonumber &\sum\limits_{p \in s} N(p) = 25 \mbox{ where } N(p) = \begin{cases} 
+															1 & \exists!n \in s(n\mbox{ is name of player }p) \\
+															0 & else \\
+                                                         \end{cases}\\
 \nonumber &\mbox{where S is the set of sets of all possible combinations of 25 players}
 \end{align}
 \pagebreak
@@ -79,4 +83,6 @@ Rank & Points \\
 11 & 24 \\
 \end{tabular}
 \end{table}
+
+
 \end{document}

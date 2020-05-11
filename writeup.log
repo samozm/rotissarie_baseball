@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.5.9)  11 MAY 2020 08:42
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.5.9)  11 MAY 2020 09:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -104,12 +104,12 @@ our Steamer/Razzball
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (10.03516pt too wide) detected at line 37
+Overfull \hbox (10.03516pt too wide) detected at line 41
 []
  []
 
 [2]
-Overfull \hbox (8.94508pt too wide) in paragraph at lines 44--61
+Overfull \hbox (8.94508pt too wide) in paragraph at lines 48--65
  [][] 
  []
 
@@ -121,7 +121,7 @@ Here is how much of TeX's memory you used:
  4214 multiletter control sequences out of 15000+600000
  4699 words of font info for 18 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 27i,10n,20p,995b,198s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 27i,14n,20p,995b,198s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
 ex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.p
@@ -130,7 +130,7 @@ r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share
 /texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
-Output written on writeup.pdf (3 pages, 97499 bytes).
+Output written on writeup.pdf (3 pages, 98875 bytes).
 PDF statistics:
  46 PDF objects out of 1000 (max. 8388607)
  32 compressed objects within 1 object stream
