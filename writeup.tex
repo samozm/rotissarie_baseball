@@ -1,0 +1,82 @@
+
+\documentclass{article}
+\usepackage{amsmath} 
+\DeclareMathOperator*{\argmax}{argmax}
+
+\begin{document}
+\begin{Large}
+\begin{center}
+Building an Optimal Roster for Rotissarie Baseball
+\end{center}
+
+\end{Large}
+
+\section*{Introduction}
+Three years ago my roommate invited me to participate in his 10-team 5x5 rotissarie baseball league. I played baseball growing up, but never had much interest in the MLB. I accepted the offer to join -- after all, \$10 is a small price to pay for a reason to watch baseball and an opportunity to glorify the part of baseball that matters the most - the stats. The thing that's intrigued me the most has always been the draft -- we use an auction draft, which adds an extra dimension to the strategy. With no set draft positions, there's no comfort of the ability to take the best player availble. Every pick is fought for, and to draft well requires a coherent strategy. 
+
+That first year, I had a relatively naive strategy: a list of a few players at each position that I wanted and a long list of players I didn't. I didn't put much thought into my budget, so my lists were exhausted midway through the draft. The second year, I didn't improve my strategy much...I think. Try as I might, I cannot remember anything about this draft. Every other draft I remember vividly, but not this one. I was about to graduate college, there was a lot going on -- no room in my head for rotisserie drafts I guess. Last year, with the league expanding to 12 teams, I improved my strategy a bit. I started by coming up with goal values for each category based on previous winning values. I exported Steeamer/Razzball projections into an excel sheet, set up to calculate my team's score for each category and tell me what percentage of my goal I'd reached so far. I knew I needed to step up my strategy for this year.
+
+At its most basic, we can think of a draft as an optimization problem, albeit with a dizzying number of unknowns. But, if we assume that our Steamer/Razzball projections and valuations are basically correct -- and make a few other simplifications -- we can formulate our draft as a basic maximization problem that we can solve to determine the best overall roster available through the draft. 
+
+\section*{Problem Formulation}
+We start by formulating a linear equation for our roster's overall score:
+\begin{align}
+S = &\sum\limits_{i \in Hitters} {H_i^{adj} + R_i^{adj} + HR_i^{adj} + RBI_i^{adj} + AVG_i^{adj}} + \nonumber \\ &\sum\limits_{j \in Pitchers} {W_j^{adj} + K_j^{adj} + SV_j^{adj} + {\frac{1}{ERA_j}}^{adj} + {\frac{1}{WHIP_j}}^{adj}}
+\end{align} 
+There are a few things to note here. Each of these is an adjusted value. Since each category has a different magnitude but each is worth the same number of points, we'll need to adjust them. Because we want each category to have the same scale but maintain each player's relative value in each, we'll need to center their means but preserve their variances. We'll use the sklearn StandardScaler method to do so (specifying to maintain the standard deviation). I've used average, ERA, and WHIP directly in this equation, despite the fact that they're actually calculated overall for the entire team from the base statistics. I experimented with separating them out, but (somewhat suprisingly) found no added value in doing so. For clarity, I've split the pitchers and hitters into two different summations, but we will end up combinining them into one. This will be equivalent to equation (1) since hitters do not generate pitching stats and pitchers do not generate hitting stats. 
+\begin{align}
+S = \sum\limits_{p \in Players} {H_p^{adj} + R_p^{adj} + HR_p^{adj} + RBI_p^{adj} + AVG_p^{adj}} + \\ \nonumber {W_p^{adj} + K_p^{adj} + SV_p^{adj} + {\frac{1}{ERA_p}}^{adj} + {\frac{1}{WHIP_p}}^{adj}}
+\end{align} 
+So, now that we have a single equation to calculate our score, we need to find the group of players that maximize it within the constraints of the league.
+
+\begin{align}
+Team = &\argmax_{s \in S} \sum\limits_{p \in s} {H_p^{adj} + R_p^{adj} + HR_p^{adj} + RBI_p^{adj} + AVG_p^{adj}} + \\ \nonumber &{W_p^{adj} + K_p^{adj} + SV_p^{adj} + {\frac{1}{ERA_p}}^{adj} + {\frac{1}{WHIP_p}}^{adj}} \\
+\nonumber s.t. &\sum\limits_{p \in s} c(p) \leq 260 \mbox{ where c(p) is the cost of player p}\\
+\nonumber &\{C,1B,2B,3B,SS,1B/3B,2B/SS,1B/2B/SS/3B,6 OF, 8 SP, 3 RP\} \in s \\ 
+\nonumber &\mbox{where S is the set of sets of all possible combinations of 25 players}
+\end{align}
+\pagebreak
+\section*{Results \& Conclusion}
+Using Gurobi, we can solve equation (3) to find our optimal set of players. Then, we can use the scores and rankings from last season (with my team removed) to get a score for our team. The category and overall rankings are as follows:
+
+\begin{table}[ht] \caption{Category Rankings}
+\centering
+\begin{tabular}{c c c c c c c c c c c} 
+\hline\hline 
+Rank & R & HR & RBI & SB & AVG & K & W & SV & ERA & WHIP \\
+\hline
+1 & 1241 & 433 & 1198 & 141 & 0.2768 & 1788 & 112 & 115 & 3.493 & 1.102 \\
+2 & 1174 & 382 & 1147 & 127 & 0.274 & 1725 & 109 & 105 & 3.665 & 1.131 \\
+3 & 1159 & 355 & 1088 & 123 & 0.2735 & 1643 & 99 & 79 & 3.76 & 1.21 \\
+4 & 1136 & 353 & 1077 & 121 & 0.271 & 1598 & 98 & 73 & 3.898 & 1.216 \\
+5 & 1110 & 352 & 1075 & 113 & 0.2705 & 1531 & 97 & 59 & 3.907 & 1.244 \\
+6 & 1067 & 332 & 1030 & 110 & 0.2645 & 1480 & 93 & 59 & 4.107 & 1.247 \\
+7 & 1006 & 321 & 1016 & 106 & 0.2642 & 1391 & 85 & 55 & 4.112 & 1.262 \\
+8 & 997 & 302 & 1000 & 97 & 0.2641 & 1387 & 84 & 54 & 4.144 & 1.267 \\
+9 & 974 & 291 & 955 & 94 & 0.262 & 1336 & 80 & 42 & 4.217 & 1.284 \\
+10 & 966 & 284 & 905 & 73 & 0.2601 & 1330 & 74 & 39 & 4.444 & 1.291 \\
+11 & 898 & 260 & 897 & 72 & 0.2592 & 1132 & 64 & 3 & 4.616 & 1.339 \\ [1ex] 
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht] \caption{Overall Rankings}
+\centering
+\begin{tabular}{c c}
+\hline\hline
+Rank & Points \\
+\hline 
+1 & 95.5 \\
+2 & 83 \\
+3 & 74 \\
+4 & 74 \\
+5 & 73 \\
+6 & 70 \\
+7 & 69.5 \\
+8 & 57 \\
+9 & 51 \\
+10 & 45.5 \\
+11 & 24 \\
+\end{tabular}
+\end{table}
+\end{document}
