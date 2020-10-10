@@ -135,16 +135,16 @@ Opponents = {'Mighty Melonheads': Team(),
              'Paul Sewald': Team(),
              'Show Me Ur Tatis': Team(), 
              'Rocket City Trash Pandas': Team(), 
-             'Team 25': Team() }
+             'kuoVID 19': Team() }
 
 # menu options
 options = [u'View Top Players To Add', u'Add a Player To My Team', u'Add a Player To An Opposing Team', u'View My Team', u'View Opposing Team']
 
-opposing_teams = [u'Mighty Melonheads', u'Bethesda Bombers', u'The Riders of Rohan', u'Team Mitchel', u'Sho Time', u'Saber Metrey', u'Cleveland Spiders', u'Paul Sewald', u'Show Me Ur Tatis', u'Rocket City Trash Pandas', u'Team 25']
+opposing_teams = [u'Mighty Melonheads', u'Bethesda Bombers', u'The Riders of Rohan', u'Team Mitchel', u'Sho Time', u'Saber Metrey', u'Cleveland Spiders', u'Paul Sewald', u'Show Me Ur Tatis', u'Rocket City Trash Pandas', u'kuoVID 19']
 
-add_to_opposing_teams = [u'Add to Mighty Melonheads', u'Add to Bethesda Bombers', u'Add to The Riders of Rohan', u'Add to Team Mitchel', u'Add to Sho Time', u'Add to Saber Metrey', u'Add to Cleveland Spiders', u'Add to Paul Sewald', u'Add to Show Me Ur Tatis', u'Add to Rocket City Trash Pandas', u'Add to Team 25']
+add_to_opposing_teams = [u'Add to Mighty Melonheads', u'Add to Bethesda Bombers', u'Add to The Riders of Rohan', u'Add to Team Mitchel', u'Add to Sho Time', u'Add to Saber Metrey', u'Add to Cleveland Spiders', u'Add to Paul Sewald', u'Add to Show Me Ur Tatis', u'Add to Rocket City Trash Pandas', u'Add to kuoVID 19']
 
-view_opposing_teams = [u'View Mighty Melonheads', u'View Bethesda Bombers', u'View The Riders of Rohan', u'View Team Mitchel', u'View Sho Time', u'View Saber Metrey', u'View Cleveland Spiders', u'View Paul Sewald', u'View Show Me Ur Tatis', u'View Rocket City Trash Pandas', u'View Team 25']
+view_opposing_teams = [u'View Mighty Melonheads', u'View Bethesda Bombers', u'View The Riders of Rohan', u'View Team Mitchel', u'View Sho Time', u'View Saber Metrey', u'View Cleveland Spiders', u'View Paul Sewald', u'View Show Me Ur Tatis', u'View Rocket City Trash Pandas', u'View kuoVID 19']
 
 # urwid functions
 def menu_button(caption, callback):
@@ -169,7 +169,7 @@ def item_chosen(button):
         # get top players to add
         # display them in a list
         tm = buildTeam()
-        potential = tm[tm['$'] != 0]
+        potential = tm[tm['$'] != 0].sort_values(by='$', ascending=False)
         mine = tm[tm['$'] == 0]
         display = urwid.Text("Top Options\n" + "-"*65 + "\n"
                    + tabulate(potential[['Name','POS','R', 'HR', 'RBI', 'SB', 'AVG','W', 'SV', 'K', 'ERA', 'WHIP','Ovr','$']], headers='keys',tablefmt='psql')
@@ -213,7 +213,7 @@ class GetPlayer(urwid.ListBox):
         for team in opposing_teams:
             opp_players = getTeamPlayers(Opponents[team])
             for pl in opp_players:
-                self.all_players = self.all_players[self.all_players['Name'] != pl]
+                self.all_players = self.all_players[self.all_players['Name'] != pl[0]]
 
         my_players = getTeamPlayers(MyTeam)
         for pl in my_players:
@@ -328,24 +328,24 @@ def get_player_add(tmNm):
     top.open_box(GetPlayer(tmNm))
 
 def printTeam(tm):
-    selected=[]
+    selected={}
     for m in tm.Bench:
         if (m != ""):
-            selected.append(m.Name)
+            selected[m.Name[0]] = m.Price
     for m in tm.Hitters:
         if (m != ""):
-            selected.append(m.Name)
+            selected[m.Name[0]] = m.Price
     for m in tm.Pitchers:
         if (m != ""):
-            selected.append(m.Name)
-    all_players = get_hitter_prices(get_hitters()).append(get_pitcher_prices(get_starting_pitchers()),ignore_index=True).append(get_pitcher_prices(get_closing_pitchers()),ignore_index=True)
+            selected[m.Name[0]] = m.Price
+    all_players = get_hitter_prices(get_hitters(True)).append(get_pitcher_prices(get_starting_pitchers()),ignore_index=True).append(get_pitcher_prices(get_closing_pitchers()),ignore_index=True)
     pl = pd.DataFrame()
-    for s in selected:
-        pl = pl.append(all_players[all_players['Name'] == s[0]])
+    for key,val in selected.items():
+        pl = pl.append(all_players[all_players['Name'] == key])
+        pl.loc[pl['Name'] == key,'$'] = val
     if not pl.empty:
         return tabulate(pl[['Name','POS','R', 'HR', 'RBI', 'SB', 'AVG','W', 'SV', 'K', 'ERA', 'WHIP','Ovr','$']],headers='keys',tablefmt='psql')
     return 'No Players on team'
-    #urwid.Text(tabulate(pl[['Name','POS','R', 'HR', 'RBI', 'SB', 'AVG','W', 'SV', 'K', 'ERA', 'WHIP','Ovr','$']], headers='keys',tablefmt='psql'))
 
 
 def getTeamPlayers(tm):
@@ -361,7 +361,7 @@ def getTeamPlayers(tm):
             selected.append(m.Name)
     return selected
 
-def get_hitters():
+def get_hitters(combined=False):
     hitters = pd.read_csv('razzball-hitters.csv', index_col='#', usecols=['#','Name','Team','ESPN','R','HR', 'RBI', 'SB','AVG','AB','H'])
     hitters.rename_axis('Razzball_Rank', inplace=True)
     hitters.reset_index(inplace=True)
@@ -376,7 +376,11 @@ def get_hitters():
     #hitters['Ovr'] = (hitters['Ovr'] + hitters['Razzball_Rank']) / 2
     hitters.rename(columns={'ESPN':'POS'}, inplace=True)
     
-    hitters = hitters.assign(POS=hitters.POS.str.split('/')).explode('POS')
+    if (combined):
+        hitters = hitters.assign(POS=hitters.POS.str.split('/'))
+    else:
+        hitters = hitters.assign(POS=hitters.POS.str.split('/')).explode('POS')
+    
     hitters.sort_values(by=['Ovr'],inplace=True,ascending=True)
     return hitters
 
@@ -439,14 +443,14 @@ def get_pitcher_prices(pitchers):
 
 def get_score(tm):
     score = {'R': 0,'HR':0,'RBI':0,'SB':0,'AVG':0,'K':0,'W':0,'SV':0,'ERA':0,'WHIP':0,'Total':0}
-    R = sorted([1174,1136,1067,1006,1241,1110,974,997,1159,966,898])
-    HR = sorted([433,352,353,284,382,321,291,332,355,302,260])
-    RBI = sorted([1198,1088,1077,1030,1147,1016,955,1000,1075,905,897])
-    SB = sorted([113,141,97,106,94,110,127,121,123,73,72])
+    R = sorted([i * (60/162) for i in [1174,1136,1067,1006,1241,1110,974,997,1159,966,898]])
+    HR = sorted([i * (60/162) for i in [433,352,353,284,382,321,291,332,355,302,260]])
+    RBI = sorted([i * (60/162) for i in [1198,1088,1077,1030,1147,1016,955,1000,1075,905,897]])
+    SB = sorted([i * (60/162) for i in [113,141,97,106,94,110,127,121,123,73,72]])
     AVG = sorted([0.2735,0.2592,0.2740,0.2642,0.2768,0.2710,0.2620,0.2601,0.2705,0.2645,0.2641])
-    K = sorted([1643,1531,1788,1598,1330,1387,1480,1725,1132,1391,1336])
-    W = sorted([97,98,109,112,80,93,85,99,64,84,74])
-    SV = sorted([59,73,3,55,115,79,105,42,39,59,54])
+    K = sorted([i * (60/162) for i in [1643,1531,1788,1598,1330,1387,1480,1725,1132,1391,1336]])
+    W = sorted([i * (60/162) for i in [97,98,109,112,80,93,85,99,64,84,74]])
+    SV = sorted([i * (60/162) for i in [59,73,3,55,115,79,105,42,39,59,54]])
     ERA = sorted([3.907, 3.898,4.144,3.665,4.444,4.107,3.760,4.217,3.493,4.112,4.616],reverse=True)
     WHIP = sorted([1.216,1.244,1.262,1.102,1.339,1.247,1.210,1.291,1.131,1.267,1.284],reverse=True)
     
@@ -520,7 +524,7 @@ def buildTeam():
     all_names = list(all_players.index)
     name_list = list(dict.fromkeys(all_players['Name']))
     for s in selected:
-        all_players.loc[all_players['Name'] == s,'$'] = 0
+        all_players.loc[all_players['Name'] == s[0],'$'] = 0
     allCosts = dict(zip(all_names,all_players['$']))
     
     player_vars = m.addVars(all_names,vtype=GRB.INTEGER,lb=0,ub=1,name='players')
@@ -574,7 +578,7 @@ def buildTeam():
     m.addConstr(sum([(allPOS[i]=='SP')*player_vars[i] for i in all_names]) == 8)
     
     m.addConstr(sum([(allPOS[i]=='RP')*player_vars[i] for i in all_names]) == 3)
-    m.addConstr(sum([(allPOS[i]=='DH')*player_vars[i] for i in all_names]) == 0)
+    m.addConstr(sum([(allPOS[i]=='DH')*player_vars[i] for i in all_names]) == 1)
     
     
     m.addConstr(sum([allCosts[i]*player_vars[i]*(allPOS[i]=='RP' or allPOS[i]=='SP') for i in all_names]) <= 120)
@@ -588,10 +592,10 @@ def buildTeam():
         m.addConstr(player_vars[f]<= player_chosen[all_players.iloc[f]['Name']]*1e8)
     
     
-    m.addConstr(sum(player_chosen.values())==25)
+    m.addConstr(sum(player_chosen.values())==26)
     
     for s in selected:
-        m.addConstr(player_chosen[s] >= 0.7)
+        m.addConstr(player_chosen[s[0]] >= 0.7)
     
     m.setParam(GRB.Param.PoolSolutions,10)
     m.setParam(GRB.Param.PoolSearchMode,2)
@@ -600,6 +604,7 @@ def buildTeam():
 
     m.optimize()
     
+    all_players['AB'] = all_players['AB'].apply(lambda x: 0 if x == 0 else 1/x)
     nSolns = m.SolCount
     max_tot = 0
     best = 0
@@ -623,7 +628,7 @@ def buildTeam():
     
     Team['ERA'] = Team['ERA'].apply(lambda x: 0 if x == 0 else 1/x)
     Team['WHIP'] = Team['WHIP'].apply(lambda x: 0 if x == 0 else 1/x)
-    return Team.append({'Name':'Total','AVG':sum(Team['H'])/sum(Team['AB']),'R':sum(Team['R']),'RBI':sum(Team['RBI']),'HR':sum(Team['HR']),'SB':sum(Team['SB']),'WHIP':(sum(Team['BB'])+sum(Team['Hits']))/sum(Team['IP']),'ERA':(sum(Team['ER'])/sum(Team['IP']))*9,'W':sum(Team['W']),'SV':sum(Team['SV']),'K':sum(Team['K']),'$':sum(Team['$'])},ignore_index=True)    
+    return Team.append({'Name':'Total','AVG':(sum(Team['H'])/sum(Team['AB'])),'R':sum(Team['R']),'RBI':sum(Team['RBI']),'HR':sum(Team['HR']),'SB':sum(Team['SB']),'WHIP':(sum(Team['BB'])+sum(Team['Hits']))/sum(Team['IP']),'ERA':(sum(Team['ER'])/sum(Team['IP']))*9,'W':sum(Team['W']),'SV':sum(Team['SV']),'K':sum(Team['K']),'$':sum(Team['$'])},ignore_index=True)    
 
         
 
