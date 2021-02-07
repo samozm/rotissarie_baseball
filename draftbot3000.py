@@ -640,7 +640,7 @@ def addPlayerToTeam(player, team, teamName):
     if (player.Type == 'Pitcher'):
         team.addPitcherToTeam(player)
     else:
-        team.addHitterToTeam(player);
+        team.addHitterToTeam(player)
     player.Team = teamName
 
 
